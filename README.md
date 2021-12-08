@@ -6,12 +6,13 @@
 
 ### 安装
 
-`go get -u github.com/wanghuiyt/ding`
-
 钉钉群机器人设置为 "加签" 验证 ([如何开启钉钉群机器人](HOWTO.md))
 
-<br/>
+```
+go get -u github.com/wanghuiyt/ding
+```
 
+<br/>
 
 ### 例子
 
