@@ -74,7 +74,7 @@ err := d.SendMessageText("Lucy, Harvey, 你们的程序挂了", "18578924567", "
 
 ```go
 ...
-err := d.SendMessage("这是@所有人的消息", "*")
+err := d.SendMessageText("这是@所有人的消息", "*")
 ...
 ```
 
