@@ -16,7 +16,7 @@ go get github.com/wanghuiyt/ding@v0.0.2
 
 > 钉钉群机器人必须设置为 "加签" 验证 ([如何开启钉钉群机器人](HOWTO.md))
 
-获取 AccessToken 和 Secret 参数, AccessToken 为加签机器人的 Webhook 地址, 比如获取到的 Webhook 地址为 `https://oapi.dingtalk.com/robot/send?access_token=8c03f234ddf2axxxxxxxxxxxx`, 那么 AccessToken 应该填写 `8c03f234ddf2axxxxxxxxxxxx`
+获取 AccessToken 和 Secret 参数, AccessToken 在加签机器人的 Webhook 地址里, 比如获取到的 Webhook 地址为 `https://oapi.dingtalk.com/robot/send?access_token=8c03f234ddf2axxxxxxxxxxxx`, 那么 AccessToken 应该填写 `8c03f234ddf2axxxxxxxxxxxx`
 
 <img style="float: left; zoom: 67%;" src="img/P9.png" alt="img-at" />
 
