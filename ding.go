@@ -10,44 +10,126 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"time"
 )
 
 type Webhook struct {
 	AccessToken string
 	Secret      string
-	EnableAt    bool
-	AtAll       bool
 }
 
-// SendMessage Function to send message
+type response struct {
+	Code int    `json:"errcode"`
+	Msg  string `json:"errmsg"`
+}
+
+//SendMessageText Function to send message
 //goland:noinspection GoUnhandledErrorResult
-func (t *Webhook) SendMessage(s string, at ...string) error {
+func (t *Webhook) SendMessageText(text string, at ...string) error {
 	msg := map[string]interface{}{
 		"msgtype": "text",
 		"text": map[string]string{
-			"content": s,
+			"content": text,
 		},
 	}
-	if t.EnableAt {
-		if t.AtAll {
-			if len(at) > 0 {
-				return errors.New("the parameter \"AtAll\" is \"true\", but the \"at\" parameter of SendMessage is not empty")
-			}
+
+	if len(at) == 0 {
+	} else if len(at) == 1 {
+		if at[0] == "*" { // at all
 			msg["at"] = map[string]interface{}{
-				"isAtAll": t.AtAll,
+				"isAtAll": true,
 			}
-		} else {
-			msg["at"] = map[string]interface{}{
-				"atMobiles": at,
-				"isAtAll":   t.AtAll,
+		} else { // at specific user
+			re := regexp.MustCompile(`^\+*\d{10,15}$`)
+			if re.MatchString(at[0]) {
+				msg["at"] = map[string]interface{}{
+					"atMobiles": at,
+					"isAtAll":   false,
+				}
+			} else {
+				return errors.New(`parameter error, "at" parameter must be in "*" or mobile phone number format`)
 			}
 		}
 	} else {
-		if len(at) > 0 {
-			return errors.New("the parameter \"EnableAt\" is \"false\", but the \"at\" parameter of SendMessage is not empty")
+		re := regexp.MustCompile(`^\+*\d{10,15}$`)
+		for _, v := range at {
+			if !re.MatchString(v) {
+				return errors.New(`parameter error, "at" parameter must be in "*" or mobile phone number format`)
+			}
+		}
+		msg["at"] = map[string]interface{}{
+			"atMobiles": at,
+			"isAtAll":   false,
 		}
 	}
+
+	b, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	resp, err := http.Post(t.getURL(), "application/json", bytes.NewBuffer(b))
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var r response
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return err
+	}
+	if r.Code != 0 {
+		return errors.New(fmt.Sprintf("response error: %s", string(body)))
+	}
+	return err
+}
+
+//goland:noinspection GoUnhandledErrorResult
+func (t *Webhook) sendMessageMarkdown(title, text string, at ...string) error {
+	msg := map[string]interface{}{
+		"msgtype": "markdown",
+		"markdown": map[string]string{
+			"title": title,
+			"text":  text,
+		},
+	}
+
+	if len(at) == 0 {
+	} else if len(at) == 1 {
+		if at[0] == "*" { // at all
+			msg["at"] = map[string]interface{}{
+				"isAtAll": true,
+			}
+		} else { // at specific user
+			re := regexp.MustCompile(`^\+*\d{10,15}$`)
+			if re.MatchString(at[0]) {
+				msg["at"] = map[string]interface{}{
+					"atMobiles": at,
+					"isAtAll":   false,
+				}
+			} else {
+				return errors.New(`parameter error, "at" parameter must be in "*" or mobile phone number format`)
+			}
+		}
+	} else {
+		re := regexp.MustCompile(`^\+*\d{10,15}$`)
+		for _, v := range at {
+			if !re.MatchString(v) {
+				return errors.New(`parameter error, "at" parameter must be in "*" or mobile phone number format`)
+			}
+		}
+		msg["at"] = map[string]interface{}{
+			"atMobiles": at,
+			"isAtAll":   false,
+		}
+	}
+
 	b, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -58,10 +140,7 @@ func (t *Webhook) SendMessage(s string, at ...string) error {
 	}
 	defer resp.Body.Close()
 	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (t *Webhook) hmacSha256(stringToSign string, secret string) string {
