@@ -7,7 +7,7 @@
 ### 安装
 
 ```
-go get -u github.com/wanghuiyt/ding
+go get github.com/wanghuiyt/ding@v0.0.2
 ```
 
 
